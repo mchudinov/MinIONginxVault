@@ -1,0 +1,30 @@
+version: '3.7'
+services:
+  minio:
+    image: '${MINIO_IMAGE_NAME}'
+    container_name: minio1
+    networks:
+      - minio
+    ports:
+      - '9001:9000'
+    restart: always
+    build:
+      context: ./minio
+      args:
+        - 'IMAGE_VERSION=${MINIO_IMAGE_VERSION}'
+  # nginx:
+  #   image: chudinov/nginx-minio
+  #   container_name: nginx
+  #   ports:
+  #     - '8081:80'
+  #   networks:
+  #     - minio
+  #   restart: always
+  #   build:
+  #     context: ./nginx
+  #   depends_on:
+  #     - minio
+networks:
+  minio:
+    name: minio
+    driver: bridge

@@ -1,0 +1,116 @@
+version: '3.7'
+
+# starts 4 docker containers running MinIO.
+services:
+  minio1:
+    image: '${MINIO_IMAGE_NAME}'
+    container_name: minio1
+    networks:
+      - minio
+    volumes:
+      - data1-1:/data1
+      - data1-2:/data2
+    ports:
+      - "9001:9000"
+    environment:
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+    command: server http://minio{1...4}/data{1...2}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://minio1:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  minio2:
+    image: '${MINIO_IMAGE_NAME}'
+    container_name: minio2
+    networks:
+      - minio
+    volumes:
+      - data2-1:/data1
+      - data2-2:/data2
+    ports:
+      - "9002:9000"
+    environment:
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+    command: server http://minio{1...4}/data{1...2}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://minio2:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  minio3:
+    image: '${MINIO_IMAGE_NAME}'
+    container_name: minio3
+    networks:
+      - minio    
+    volumes:
+      - data3-1:/data1
+      - data3-2:/data2
+    ports:
+      - "9003:9000"
+    environment:
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+    command: server http://minio{1...4}/data{1...2}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://minio3:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  minio4:
+    image: '${MINIO_IMAGE_NAME}'
+    container_name: minio4
+    networks:
+      - minio    
+    volumes:
+      - data4-1:/data1
+      - data4-2:/data2
+    ports:
+      - "9004:9000"
+    environment:
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+    command: server http://minio{1...4}/data{1...2}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://minio4:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  nginx:
+    image: chudinov/nginx-minio
+    container_name: nginx
+    ports:
+      - '8081:80'
+      - '443:443'
+    networks:
+      - minio
+    restart: always
+    build:
+      context: ./nginx
+    depends_on:
+      - minio1
+      - minio2
+      - minio3
+      - minio4
+
+volumes:
+  data1-1:
+  data1-2:
+  data2-1:
+  data2-2:
+  data3-1:
+  data3-2:
+  data4-1:
+  data4-2:
+
+networks:
+  minio:
+    name: minio
+    driver: bridge
+
