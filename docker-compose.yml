@@ -101,11 +101,6 @@ services:
   vault:
     image: chudinov/vault
     container_name: vault
-    # volumes:
-    #   - ./vault/config:/vault/config
-    #   - ./vault/policies:/vault/policies
-    #   - ./vault/data:/vault/data
-    #   - ./vault/logs:/vault/logs
     ports:
       - 8200:8200
     restart: always
