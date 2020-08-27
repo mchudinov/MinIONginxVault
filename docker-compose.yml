@@ -19,6 +19,8 @@ services:
       interval: 30s
       timeout: 20s
       retries: 3
+    depends_on:
+      - vault      
 
   minio2:
     image: '${MINIO_IMAGE_NAME}'
@@ -37,6 +39,8 @@ services:
       interval: 30s
       timeout: 20s
       retries: 3
+    depends_on:
+      - vault
 
   minio3:
     image: '${MINIO_IMAGE_NAME}'
@@ -55,6 +59,8 @@ services:
       interval: 30s
       timeout: 20s
       retries: 3
+    depends_on:
+      - vault
 
   minio4:
     image: '${MINIO_IMAGE_NAME}'
@@ -73,13 +79,15 @@ services:
       interval: 30s
       timeout: 20s
       retries: 3
+    depends_on:
+      - vault      
 
   nginx:
     image: chudinov/nginx-minio
     container_name: nginx
     ports:
-      - '8081:80'
-      - '443:443'
+      - "8081:80"
+      - "443:443"
     networks:
       - minio
     restart: always
@@ -89,7 +97,27 @@ services:
       - minio1
       - minio2
       - minio3
-      - minio4
+  
+  vault:
+    image: chudinov/vault
+    container_name: vault
+    # volumes:
+    #   - ./vault/config:/vault/config
+    #   - ./vault/policies:/vault/policies
+    #   - ./vault/data:/vault/data
+    #   - ./vault/logs:/vault/logs
+    ports:
+      - 8200:8200
+    restart: always
+    build:
+      context: ./vault
+    environment:
+      - VAULT_ADDR=http://0.0.0.0:8200
+      - VAULT_API_ADDR=http://0.0.0.0:8200
+      - VAULT_ADDRESS=http://0.0.0.0:8200
+    cap_add:
+      - IPC_LOCK
+    command: vault server -config=/vault/config/vault.json
 
 volumes:
   data1-1:
