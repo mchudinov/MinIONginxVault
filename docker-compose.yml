@@ -1,6 +1,5 @@
 version: '3.7'
 
-# starts 4 docker containers running MinIO.
 services:
   minio1:
     image: '${MINIO_IMAGE_NAME}'
@@ -19,7 +18,7 @@ services:
       - MINIO_KMS_KES_KEY_FILE=/build/kes-identity-root.key
       - MINIO_KMS_KES_CA_PATH=/build/kes-server.cert
       - MINIO_KMS_KES_KEY_NAME=minio-key
-      - MINIO_SSE_AUTO_ENCRYPTION=on    
+      - MINIO_KMS_AUTO_ENCRYPTION=on    
     healthcheck:
       test: ["CMD", "curl", "-f", "http://minio1:9000/minio/health/live"]
       interval: 30s
@@ -46,9 +45,9 @@ services:
       - MINIO_KMS_KES_KEY_FILE=/build/kes-identity-root.key
       - MINIO_KMS_KES_CA_PATH=/build/kes-server.cert
       - MINIO_KMS_KES_KEY_NAME=minio-key
-      - MINIO_SSE_AUTO_ENCRYPTION=on    
+      - MINIO_KMS_AUTO_ENCRYPTION=on    
     healthcheck:
-      test: ["CMD", "curl", "-f", "https://minio2:9000/minio/health/live"]
+      test: ["CMD", "curl", "-f", "http://minio2:9000/minio/health/live"]
       interval: 30s
       timeout: 20s
       retries: 3
@@ -73,9 +72,9 @@ services:
       - MINIO_KMS_KES_KEY_FILE=/build/kes-identity-root.key
       - MINIO_KMS_KES_CA_PATH=/build/kes-server.cert
       - MINIO_KMS_KES_KEY_NAME=minio-key
-      - MINIO_SSE_AUTO_ENCRYPTION=on
+      - MINIO_KMS_AUTO_ENCRYPTION=on
     healthcheck:
-      test: ["CMD", "curl", "-f", "https://minio3:9000/minio/health/live"]
+      test: ["CMD", "curl", "-f", "http://minio3:9000/minio/health/live"]
       interval: 30s
       timeout: 20s
       retries: 3
@@ -83,9 +82,11 @@ services:
       - kes-setup
     command: server http://minio{1...3}/data{1...2}
       
-  nginx:
+  minio-lb:
     image: nginx-minio
-    container_name: nginx
+    container_name: minio-lb
+    volumes:
+      - build:/build
     ports:
       - "8081:80"
       - "443:443"
@@ -93,7 +94,7 @@ services:
       - minio
     restart: always
     build:
-      context: ./nginx
+      context: ./nginx-minio
     depends_on:
       - minio1
       - minio2
@@ -106,25 +107,21 @@ services:
     networks:
       - minio
     volumes:
-      - build:/build      
+      - build:/build
+    build:
+      context: ./setup      
     environment:
       - KES_SERVER=https://kes:7373
       - KES_CLIENT_KEY=/build/kes-identity-minio.key
       - KES_CLIENT_CERT=/build/kes-identity-minio.cert
     depends_on:
-      - minio1
-      - minio2
-      - minio3
-      - kes
+      - minio-lb
     command:  >
-      sh -c " apk add -U --no-cache ca-certificates &&
-              cp /build/kes-server.cert /usr/local/share/ca-certificates/kes-server.crt  &&
-              update-ca-certificates &&              
-              wget https://github.com/minio/kes/releases/latest/download/kes-linux-amd64 -O /bin/kes && 
-              chmod +x /bin/kes && 
-              wget https://dl.min.io/client/mc/release/linux-amd64/mc -O /bin/mc &&
-              chmod +x /bin/mc &&             
-              /bin/sh"
+      sh -c " cp /build/kes-server.cert /usr/local/share/ca-certificates/kes-server.crt  &&
+              update-ca-certificates && 
+              mc alias set -
+              mc alias set minio https://minio-lb minio minio123  --api 's3v4' --insecure &&                         
+              /bin/sh "
 
   kes:
     image: kes
@@ -146,16 +143,14 @@ services:
               openssl req -new -x509 -days 365 -key /build/kes-server.key -out /build/kes-server.cert -subj '/C=/ST=/L=/O=/CN=kes'
               kes tool identity new --force --key=/build/kes-identity-root.key --cert=/build/kes-identity-root.cert root &&
               kes tool identity new --force --key=/build/kes-identity-minio.key --cert=/build/kes-identity-minio.cert minio &&              
-              cp /build/kes-identity-minio.cert /usr/local/share/ca-certificates/kes-identity-minio.crt  &&
-              cp /build/kes-server.cert /usr/local/share/ca-certificates/kes-server.crt  &&
+              cp /build/kes-identity-minio.cert /usr/local/share/ca-certificates/kes-identity-minio.crt  &&              
               cp /build/kes-identity-root.cert /usr/local/share/ca-certificates/kes-identity-root.crt  &&
-              update-ca-certificates &&                            
-              export ROOT_IDENTITY=$$(kes tool identity of /build/kes-identity-root.cert) &&              
-              echo root identity: $$ROOT_IDENTITY &&
-              kes server --config=/etc/kes/kes-server.yml --root=$$ROOT_IDENTITY "
+              cp /build/kes-server.cert /usr/local/share/ca-certificates/kes-server.crt  &&
+              update-ca-certificates &&              
+              kes server --config=/etc/kes/kes-server.yml --root=$$(kes tool identity of /build/kes-identity-root.cert) "
 
   kes-setup:
-    image: kes-setup
+    image: setup
     container_name: kes-setup
     networks:
       - minio 
@@ -166,18 +161,15 @@ services:
       - KES_CLIENT_KEY=/build/kes-identity-root.key
       - KES_CLIENT_CERT=/build/kes-identity-root.cert
     build:
-      context: ./kes
+      context: ./setup
     depends_on:
-      - kes    
+      - kes
     command:  >
       sh -c " cp /build/kes-server.cert /usr/local/share/ca-certificates/kes-server.crt  &&
               cp /build/kes-identity-root.cert /usr/local/share/ca-certificates/kes-identity-root.crt  &&
-              update-ca-certificates  && 
-              wget https://dl.min.io/client/mc/release/linux-amd64/mc -O /bin/mc &&
-              chmod +x /bin/mc && 
+              update-ca-certificates  &&               
               kes key create minio-key && 
-              kes key derive minio-key &&
-              mc encrypt set sse-s3 minio/bucket1 "
+              kes key derive minio-key "
 
   vault:
     image: vault
@@ -203,23 +195,6 @@ services:
               update-ca-certificates  && 
               vault server -dev -config /vault/config/vault.json "
 
-  # certificates-builder:
-  #   image: alpine
-  #   container_name: certificates-builder
-  #   volumes:
-  #     - build1:/build1
-  #     - build2:/build2
-  #     - build3:/build3
-  #   build:
-  #     context: ./certificates-builder
-  #   command: >
-  #     sh -c " openssl ecparam -genkey -name prime256v1 | openssl ec -out /build1/private.key &&
-  #             openssl req -new -x509 -days 365 -key /build1/private.key -out /build1/public.crt -subj '/C=/ST=/L=/O=/CN=minio1' &&
-  #             openssl ecparam -genkey -name prime256v1 | openssl ec -out /build2/private.key &&
-  #             openssl req -new -x509 -days 365 -key /build2/private.key -out /build2/public.crt -subj '/C=/ST=/L=/O=/CN=minio2' &&
-  #             openssl ecparam -genkey -name prime256v1 | openssl ec -out /build3/private.key &&
-  #             openssl req -new -x509 -days 365 -key /build3/private.key -out /build3/public.crt -subj '/C=/ST=/L=/O=/CN=minio3' "
-
 volumes:
   data1-1:
   data1-2:
@@ -228,9 +203,6 @@ volumes:
   data3-1:
   data3-2:
   build:
-  # build1:
-  # build2:
-  # build3:
 
 networks:
   minio:

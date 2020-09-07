@@ -1,5 +1,5 @@
 FROM vault
-RUN apk --no-cache add openssl
+RUN apk add -U --no-cache openssl
 RUN mkdir -p /vault/config
 COPY vault.json /vault/config/vault.json
 
