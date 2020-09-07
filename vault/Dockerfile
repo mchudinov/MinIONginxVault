@@ -1,7 +1,6 @@
-# FROM alpine
-# RUN apk --no-cache add openssl
-
 FROM vault
+RUN apk --no-cache add openssl
 RUN mkdir -p /vault/config
 COPY vault.json /vault/config/vault.json
-EXPOSE 8200
+
+EXPOSE 8201

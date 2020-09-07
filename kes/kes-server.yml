@@ -1,0 +1,38 @@
+address: 0.0.0.0:7373
+root:    disabled  
+
+tls:
+  key:  /build/kes-server.key
+  cert: /build/kes-server.cert
+
+cache:
+  expiry:
+    any:    5m0s
+    unused: 30s
+
+log:
+  error: on   
+  audit: on   
+
+policy:    
+  minio-policy: 
+    paths:
+    - /v1/key/create/minio-key
+    - /v1/key/generate/minio-key
+    - /v1/key/decrypt/minio-key
+    identities:
+    - ${MINIO_IDENTITY}
+
+keys:
+  fs:
+      path: ./keys
+  # vault:
+  #   endpoint: https://127.0.0.1:8200
+  #   approle:
+  #     id:     "" # Your AppRole ID
+  #     secret: "" # Your AppRole Secret ID
+  #     retry:  15s
+  #   status:
+  #     ping: 10s
+  #   tls:
+  #     ca: vault-tls.crt # Since we use self-signed certificates
