@@ -2,6 +2,20 @@
 
 ## Infrastructure
 
+```
+                                    ┌────────────┐
+                                  ┌─┤   MinIO 1  ├─┐
+                                  │ └────────────┘ │
+┌────────────┐    ┌────────────┐  │ ┌────────────┐ │        ┌────────────┐           ┌───────────┐  
+│  Browser   ├───>│  Nginx-LB  ├──┼─│   MinIO 2  ├─┼────────┤ KES Server ├───────────┤   Vault   │  
+└────────────┘    └────────────┘  │ └────────────┘ │        └────────────┘           └───────────┘  
+                                  │ ┌────────────┐ │ 
+                                  └─┤   MinIO 3  ├─┘
+                                    └────────────┘
+                            
+
+```
+
 ## Prerequsites
 
 - docker-compose installed.
@@ -10,7 +24,10 @@
 
 ## Build and start
 
-`docker-compose up -d`
+```sh
+docker-compose build
+docker-compose up -d
+```
 
 ## Login to MinIO web-interface
 

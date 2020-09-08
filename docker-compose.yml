@@ -119,7 +119,6 @@ services:
     command:  >
       sh -c " cp /build/kes-server.cert /usr/local/share/ca-certificates/kes-server.crt  &&
               update-ca-certificates && 
-              mc alias set -
               mc alias set minio https://minio-lb minio minio123  --api 's3v4' --insecure &&                         
               /bin/sh "
 
@@ -137,7 +136,9 @@ services:
       - KES_CLIENT_KEY=/build/kes-identity-root.key
       - KES_CLIENT_CERT=/build/kes-identity-root.cert      
     build:
-      context: ./kes    
+      context: ./kes
+    depends_on:
+      - vault
     command:  >
       sh -c " openssl ecparam -genkey -name prime256v1 | openssl ec -out /build/kes-server.key &&
               openssl req -new -x509 -days 365 -key /build/kes-server.key -out /build/kes-server.cert -subj '/C=/ST=/L=/O=/CN=kes'
@@ -146,6 +147,7 @@ services:
               cp /build/kes-identity-minio.cert /usr/local/share/ca-certificates/kes-identity-minio.crt  &&              
               cp /build/kes-identity-root.cert /usr/local/share/ca-certificates/kes-identity-root.crt  &&
               cp /build/kes-server.cert /usr/local/share/ca-certificates/kes-server.crt  &&
+              cp /build/vault.cert /usr/local/share/ca-certificates/vault.crt  &&
               update-ca-certificates &&              
               kes server --config=/etc/kes/kes-server.yml --root=$$(kes tool identity of /build/kes-identity-root.cert) "
 
@@ -160,16 +162,21 @@ services:
       - KES_SERVER=https://kes:7373
       - KES_CLIENT_KEY=/build/kes-identity-root.key
       - KES_CLIENT_CERT=/build/kes-identity-root.cert
+      - VAULT_ADDR=https://vault:8201
     build:
       context: ./setup
     depends_on:
       - kes
+      - vault
     command:  >
       sh -c " cp /build/kes-server.cert /usr/local/share/ca-certificates/kes-server.crt  &&
               cp /build/kes-identity-root.cert /usr/local/share/ca-certificates/kes-identity-root.crt  &&
               update-ca-certificates  &&               
               kes key create minio-key && 
-              kes key derive minio-key "
+              kes key derive minio-key &&
+              vault secrets enable kv &&
+              vault auth enable approle &&
+              vault policy write kes-policy ./kes-policy.hcl "
 
   vault:
     image: vault
@@ -180,19 +187,20 @@ services:
     build:
       context: ./vault
     environment:
-      - VAULT_ADDR=http://0.0.0.0:8201
-      - VAULT_API_ADDR=http://0.0.0.0:8201
-      - VAULT_ADDRESS=http://0.0.0.0:8201
+      - VAULT_ADDR=https://vault:8201
+      - VAULT_API_ADDR=https://vault:8201
+      - VAULT_ADDRESS=https://vault:8201
       - VAULT_SKIP_VERIFY=true
     cap_add:
       - IPC_LOCK
     volumes:
       - build:/build
     command: > 
-      sh -c " openssl ecparam -genkey -name prime256v1 | openssl ec -out /vault/config/vault-tls.key &&
-              openssl req -new -x509 -days 365 -key /vault/config/vault-tls.key -out /vault/config/vault-tls.cert -subj '/C=/ST=/L=/O=/CN=vault' &&
-              cp /vault/config/vault-tls.cert /usr/local/share/ca-certificates/vault-tls.cert  &&
-              update-ca-certificates  && 
+      sh -c " openssl ecparam -genkey -name prime256v1 | openssl ec -out /vault/config/vault.key &&
+              openssl req -new -x509 -days 365 -key /vault/config/vault.key -out /vault/config/vault.cert -subj '/C=/ST=/L=/O=/CN=vault' &&
+              cp /vault/config/vault.cert /build/vault.cert  &&
+              cp /vault/config/vault.cert /usr/local/share/ca-certificates/vault.crt  &&
+              update-ca-certificates  &&               
               vault server -dev -config /vault/config/vault.json "
 
 volumes:

@@ -2,8 +2,8 @@
     "listener":  {                     
       "tcp":  {                        
         "address":  "0.0.0.0:8201",          
-        "tls_cert_file": "/vault/config/vault-tls.cert",
-        "tls_key_file": "/vault/config/vault-tls.key",
+        "tls_cert_file": "/vault/config/vault.cert",
+        "tls_key_file": "/vault/config/vault.key",
         "tls_min_version": "tls12",
         "tls_disable":  false    
       }                                
