@@ -27,7 +27,7 @@ keys:
   fs:
       path: ./keys
   # vault:
-  #   endpoint: https://127.0.0.1:8200
+  #   endpoint: https://vault:8201
   #   approle:
   #     id:     "" # Your AppRole ID
   #     secret: "" # Your AppRole Secret ID
@@ -35,4 +35,4 @@ keys:
   #   status:
   #     ping: 10s
   #   tls:
-  #     ca: vault-tls.crt # Since we use self-signed certificates
+  #     ca: /build/vault.crt # Since we use self-signed certificates

@@ -41,11 +41,19 @@ Login to interactive-shell container:
 
 `docker exec -it interactive-shell sh`
 
-Test MinIO
+Test MinIO connection
 
 `mc ls minio --insecure`
 
-## Watch KES logs
+Create new bucket
+
+`mc ls minio --insecure`
+
+Enable encryption for the bucket
+
+`mc ls minio --insecure`
+
+## Trace KES logs
 Login to KES container shell:
 
 ` docker exec -it kes sh`
