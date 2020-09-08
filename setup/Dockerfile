@@ -7,5 +7,5 @@ RUN apk add -U --no-cache ca-certificates
 RUN apk add -U --no-cache openssl
 RUN apk add -U --no-cache curl
 RUN wget https://releases.hashicorp.com/vault/1.5.3/vault_1.5.3_linux_amd64.zip -O /bin/vault.zip
-RUN unzip /bin/vault.zip -d /bin
+RUN unzip -o /bin/vault.zip -d /bin
 RUN chmod +x /bin/vault 

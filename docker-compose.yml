@@ -114,16 +114,21 @@ services:
       - KES_SERVER=https://kes:7373
       - KES_CLIENT_KEY=/build/kes-identity-minio.key
       - KES_CLIENT_CERT=/build/kes-identity-minio.cert
+      - VAULT_ADDR=https://vault:8201
+      - VAULT_API_ADDR=https://vault:8201
+      - VAULT_ADDRESS=https://vault:8201
+      - VAULT_SKIP_VERIFY=true
     depends_on:
       - minio-lb
     command:  >
-      sh -c " cp /build/kes-server.cert /usr/local/share/ca-certificates/kes-server.crt  &&
+      sh -c " cp /build/vault.cert /usr/local/share/ca-certificates/vault.crt  &&
+              cp /build/kes-server.cert /usr/local/share/ca-certificates/kes-server.crt  &&
               update-ca-certificates && 
               mc alias set minio https://minio-lb minio minio123  --api 's3v4' --insecure &&                         
               /bin/sh "
 
   kes:
-    image: chudinov/kes
+    image: kes
     container_name: kes
     ports:
       - "7373:7373"      
@@ -163,13 +168,17 @@ services:
       - KES_CLIENT_KEY=/build/kes-identity-root.key
       - KES_CLIENT_CERT=/build/kes-identity-root.cert
       - VAULT_ADDR=https://vault:8201
+      - VAULT_API_ADDR=https://vault:8201
+      - VAULT_ADDRESS=https://vault:8201
+      - VAULT_SKIP_VERIFY=true
     build:
       context: ./setup
     depends_on:
       - kes
       - vault
     command:  >
-      sh -c " cp /build/kes-server.cert /usr/local/share/ca-certificates/kes-server.crt  &&
+      sh -c " cp /build/vault.cert /usr/local/share/ca-certificates/vault.crt  &&
+              cp /build/kes-server.cert /usr/local/share/ca-certificates/kes-server.crt  &&
               cp /build/kes-identity-root.cert /usr/local/share/ca-certificates/kes-identity-root.crt  &&
               update-ca-certificates  &&               
               kes key create minio-key && 
@@ -183,6 +192,10 @@ services:
     container_name: vault
     ports:
       - 8201:8201
+    networks:
+      - minio
+    volumes:
+      - build:/build 
     restart: always
     build:
       context: ./vault
@@ -193,8 +206,6 @@ services:
       - VAULT_SKIP_VERIFY=true
     cap_add:
       - IPC_LOCK
-    volumes:
-      - build:/build
     command: > 
       sh -c " openssl ecparam -genkey -name prime256v1 | openssl ec -out /vault/config/vault.key &&
               openssl req -new -x509 -days 365 -key /vault/config/vault.key -out /vault/config/vault.cert -subj '/C=/ST=/L=/O=/CN=vault' &&
