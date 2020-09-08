@@ -1,5 +1,9 @@
 # MinIO with KES and HashiCorp Vault in Docker Compose
 
+## MinIO documentation reference
+https://github.com/minio/kes/wiki/Hashicorp-Vault-Keystore
+
+
 ## Infrastructure
 
 ```
@@ -11,9 +15,7 @@
 └────────────┘    └────────────┘  │ └────────────┘ │        └────────────┘           └───────────┘  
                                   │ ┌────────────┐ │ 
                                   └─┤   MinIO 3  ├─┘
-                                    └────────────┘
-                            
-
+                                    └────────────┘                           
 ```
 
 ## Prerequsites
@@ -45,19 +47,37 @@ Test MinIO connection
 
 `mc ls minio --insecure`
 
-Create new bucket
+Create a bucket
 
-`mc ls minio --insecure`
+`mc mb bucket1 --insecure`
 
-Enable encryption for the bucket
+Enable encryption for a bucket
 
-`mc ls minio --insecure`
+`mc encrypt set sse-s3 minio/bucket1/ --insecure`
+
+Check encyption status for a bucket
+
+`mc encrypt info minio/bucket1/ --insecure`
+
+Upload a file to a bucket
+
+`mc cp myfile.txt minio/bucket1/ --insecure`
 
 ## Trace KES logs
 Login to KES container shell:
 
-` docker exec -it kes sh`
+`docker exec -it kes sh`
 
 Trace KES logs
 
 `kes log trace`
+
+## Clean up
+
+Remove related containers
+
+`docker-compose down`
+
+Remove all related images 
+
+`docker rmi -f $(docker images -a -q)`
