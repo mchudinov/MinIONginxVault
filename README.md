@@ -1,22 +1,23 @@
 # MinIO with KES and HashiCorp Vault in Docker Compose
 
-## MinIO documentation reference
-https://github.com/minio/kes/wiki/Hashicorp-Vault-Keystore
-
-
 ## Infrastructure
 
 ```
                                     ┌────────────┐
                                   ┌─┤   MinIO 1  ├─┐
                                   │ └────────────┘ │
-┌────────────┐    ┌────────────┐  │ ┌────────────┐ │        ┌────────────┐           ┌───────────┐  
-│  Browser   ├───>│  Nginx-LB  ├──┼─│   MinIO 2  ├─┼────────┤ KES Server ├───────────┤   Vault   │  
-└────────────┘    └────────────┘  │ └────────────┘ │        └────────────┘           └───────────┘  
+┌────────────┐    ┌────────────┐  │ ┌────────────┐ │        ┌────────────┐        ┌───────────┐  
+│  Browser   ├───>│  Nginx-LB  ├──┼─│   MinIO 2  ├─┼────────┤ KES Server ├────────┤   Vault   │  
+└────────────┘    └────────────┘  │ └────────────┘ │        └────────────┘        └───────────┘  
                                   │ ┌────────────┐ │ 
                                   └─┤   MinIO 3  ├─┘
                                     └────────────┘                           
 ```
+
+## MinIO documentation reference
+Relevant documentation
+
+https://github.com/minio/kes/wiki/Hashicorp-Vault-Keystore
 
 ## Prerequsites
 
