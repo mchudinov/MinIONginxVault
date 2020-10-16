@@ -25,7 +25,7 @@ policy:
 
 keys:
   fs:
-      path: ./keys
+    path: ./keys
   # vault:
   #   endpoint: https://vault:8201
   #   approle:

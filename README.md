@@ -50,7 +50,7 @@ Test MinIO connection
 
 Create a bucket
 
-`mc mb bucket1 --insecure`
+`mc mb minio/bucket1 --insecure`
 
 Enable encryption for a bucket
 
