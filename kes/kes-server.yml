@@ -5,11 +5,6 @@ tls:
   key:  /build/kes-server.key
   cert: /build/kes-server.cert
 
-cache:
-  expiry:
-    any:    5m0s
-    unused: 30s
-
 log:
   error: on   
   audit: on   
