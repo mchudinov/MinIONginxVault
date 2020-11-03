@@ -17,8 +17,7 @@ services:
       - MINIO_KMS_KES_CERT_FILE=/build/kes-identity-root.cert
       - MINIO_KMS_KES_KEY_FILE=/build/kes-identity-root.key
       - MINIO_KMS_KES_CA_PATH=/build/kes-server.cert
-      - MINIO_KMS_KES_KEY_NAME=minio-key
-      - MINIO_KMS_AUTO_ENCRYPTION=on    
+      - MINIO_KMS_KES_KEY_NAME=minio-key 
     healthcheck:
       test: ["CMD", "curl", "-f", "http://minio1:9000/minio/health/live"]
       interval: 30s
@@ -45,7 +44,6 @@ services:
       - MINIO_KMS_KES_KEY_FILE=/build/kes-identity-root.key
       - MINIO_KMS_KES_CA_PATH=/build/kes-server.cert
       - MINIO_KMS_KES_KEY_NAME=minio-key
-      - MINIO_KMS_AUTO_ENCRYPTION=on    
     healthcheck:
       test: ["CMD", "curl", "-f", "http://minio2:9000/minio/health/live"]
       interval: 30s
@@ -72,7 +70,6 @@ services:
       - MINIO_KMS_KES_KEY_FILE=/build/kes-identity-root.key
       - MINIO_KMS_KES_CA_PATH=/build/kes-server.cert
       - MINIO_KMS_KES_KEY_NAME=minio-key
-      - MINIO_KMS_AUTO_ENCRYPTION=on
     healthcheck:
       test: ["CMD", "curl", "-f", "http://minio3:9000/minio/health/live"]
       interval: 30s
@@ -112,8 +109,8 @@ services:
       context: ./setup      
     environment:
       - KES_SERVER=https://kes:7373
-      - KES_CLIENT_KEY=/build/kes-identity-minio.key
-      - KES_CLIENT_CERT=/build/kes-identity-minio.cert
+      - KES_CLIENT_KEY=/build/kes-identity-root.key
+      - KES_CLIENT_CERT=/build/kes-identity-root.cert
       - VAULT_ADDR=https://vault:8201
       - VAULT_API_ADDR=https://vault:8201
       - VAULT_ADDRESS=https://vault:8201
@@ -148,8 +145,6 @@ services:
       sh -c " openssl ecparam -genkey -name prime256v1 | openssl ec -out /build/kes-server.key &&
               openssl req -new -x509 -days 365 -key /build/kes-server.key -out /build/kes-server.cert -subj '/C=/ST=/L=/O=/CN=kes'
               kes tool identity new --force --key=/build/kes-identity-root.key --cert=/build/kes-identity-root.cert root &&
-              kes tool identity new --force --key=/build/kes-identity-minio.key --cert=/build/kes-identity-minio.cert minio &&              
-              cp /build/kes-identity-minio.cert /usr/local/share/ca-certificates/kes-identity-minio.crt  &&              
               cp /build/kes-identity-root.cert /usr/local/share/ca-certificates/kes-identity-root.crt  &&
               cp /build/kes-server.cert /usr/local/share/ca-certificates/kes-server.crt  &&
               cp /build/vault.cert /usr/local/share/ca-certificates/vault.crt  &&
