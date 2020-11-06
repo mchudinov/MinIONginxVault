@@ -2,10 +2,7 @@
     "listener":  {                     
       "tcp":  {                        
         "address":  "0.0.0.0:8201",          
-        "tls_cert_file": "/vault/config/vault.cert",
-        "tls_key_file": "/vault/config/vault.key",
-        "tls_min_version": "tls12",
-        "tls_disable":  false    
+        "tls_disable":  true
       }                                
     },                                 
     "backend": {                       
@@ -13,8 +10,6 @@
         "path": "/vault/file"          
       }                                
     },                                 
-    "default_lease_ttl": "100h",       
-    "max_lease_ttl": "500h",
-    "api_addr": "https://127.0.0.1:8201",
+    "api_addr": "http://127.0.0.1:8201",
     "ui": true
   }  

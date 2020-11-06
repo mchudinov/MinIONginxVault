@@ -1,0 +1,28 @@
+version: '3.7'
+
+services:
+  vault:
+    image: vault
+    container_name: vault
+    ports:
+      - 8201:8201
+    networks:
+      - vault
+    restart: always
+    build:
+      context: ./vault
+    environment:
+      - VAULT_ADDR=http://vault:8201
+      - VAULT_API_ADDR=http://vault:8201
+      - VAULT_ADDRESS=http://vault:8201
+      - VAULT_SKIP_VERIFY=true      
+    cap_add:
+      - IPC_LOCK
+    command: > 
+      sh -c " vault server -dev -config /vault/config/vault.json "
+
+networks:
+  vault:
+    name: vault
+    driver: bridge
+

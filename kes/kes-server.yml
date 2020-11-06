@@ -1,5 +1,4 @@
 address: 0.0.0.0:7373
-root:    disabled  
 
 tls:
   key:  /build/kes-server.key
@@ -12,22 +11,20 @@ log:
 policy:    
   minio-policy: 
     paths:
-    - /v1/key/create/minio-key
-    - /v1/key/generate/minio-key
-    - /v1/key/decrypt/minio-key
+    - /v1/key/create/minio-key*
+    - /v1/key/generate/minio-key*
+    - /v1/key/decrypt/minio-key*
     identities:
     - ${MINIO_IDENTITY}
 
 keys:
-  fs:
-    path: ./keys
-  # vault:
-  #   endpoint: https://vault:8201
-  #   approle:
-  #     id:     "" # Your AppRole ID
-  #     secret: "" # Your AppRole Secret ID
-  #     retry:  15s
-  #   status:
-  #     ping: 10s
-  #   tls:
-  #     ca: /build/vault.crt # Since we use self-signed certificates
+  # fs:
+  #   path: ./keys
+  vault:
+    endpoint: http://host.docker.internal:8201
+    approle:
+      id:     "986f8a4a-fa83-bc20-ffd3-14d1973e9ac1" # Your AppRole ID
+      secret: "255a8056-6d6a-40fd-ad72-3822e0ecac51" # Your AppRole Secret ID
+      retry:  15s
+    status:
+      ping: 10s
