@@ -54,6 +54,8 @@ We are interested in the **role_id** and **secret_id**.
 
 4. Edit docker-compose.yml 
 
+For example:
+
 ` VAULT_TOKEN=s.xPsBBNfiUV09xN84mQK7BZA5`
 
 5. Edit /kes/kes-server.yml
@@ -67,6 +69,15 @@ secret: "255a8056-6d6a-40fd-ad72-3822e0ecac51" # Your AppRole Secret ID
 docker-compose -f docker-compose.yml build
 docker-compose -f docker-compose.yml up -d 
 ```
+
+<!-- 7. Create minio-key
+
+Login to interactive shell and execute commands:
+```sh
+docker exec -it interactive-shell sh
+kes key create minio-key 
+kes key derive minio-key 
+``` -->
 
 ## Login to MinIO web-interface
 

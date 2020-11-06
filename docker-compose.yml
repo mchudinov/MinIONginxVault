@@ -121,7 +121,9 @@ services:
     command:  >
       sh -c " cp /build/kes-server.cert /usr/local/share/ca-certificates/kes-server.crt  &&
               update-ca-certificates && 
-              mc alias set minio https://minio-lb minio minio123  --api 's3v4' --insecure &&                         
+              mc alias set minio https://minio-lb minio minio123  --api 's3v4' --insecure &&
+              kes key create minio-key &&
+              kes key derive minio-key &&
               /bin/sh "
 
   kes:
